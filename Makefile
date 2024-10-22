@@ -17,10 +17,10 @@ run:
 
 
 all:
-	$(compiler) $(flags) $(target) $(source)
+	$(compiler) $(flags) $(target) src/$(source)
 
 mac:
-	$(compiler) $(paths) $(flags) $(target) $(source)
+	$(compiler) $(paths) $(flags) $(target) src/$(source)
 
 clean:
 	rm -f $(target)
