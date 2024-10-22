@@ -15,21 +15,20 @@ Description: File containing the implementation for the built-in commands liike 
 #include <unistd.h>
 
 void pwd() {              // Implements the pwd function. Prints the current working directory
-  using namespace std;
-  char cwd[512];
-  if (getcwd(cwd, sizeof(cwd)) != nullptr) {
+    using namespace std;
+    char cwd[512];
+    if (getcwd(cwd, sizeof(cwd)) != nullptr) {
     cout << cwd << endl;
-  }
-  else {
+    }
+    else {
     cerr << "Error getting current working directory" << endl;
-  }
+    }
 }
 
 
 void cd(const std::vector<std::string> &args) {
     using namespace std;
     const char* path;
-
     if (args.empty() || args[0].empty()) {
         path = "..";  // Default to .. when no directory is provided
         if (path == nullptr) {

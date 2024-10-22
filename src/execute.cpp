@@ -127,7 +127,7 @@ bool execute_builtin(const vector<string> &command) {
         return true;
     } 
     else if (cmd == "echo") {
-        echo(const_cast<vector<string>&>(command)); // echo expects a non-const reference
+        echo(args);
         return true;
     }
     else if (cmd == "quit" || cmd == "exit") {
