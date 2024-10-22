@@ -1,5 +1,5 @@
 /*
-Author: Blake Carlson
+Author: Blake Carlson, Holden Vail
 Date: 10-22-2024
 Class: EECS 678
 Assignment: Quash Project
@@ -14,6 +14,6 @@ Description: This is the header file for builtInCommands.cpp which contains the 
 #include <vector>
 
 void pwd();
-void cd(const vector<string>& args);
-void echo(vector<string>& args);
+void cd(const std::vector<std::string>& args);
+void echo(std::vector<std::string>& args);
 #endif

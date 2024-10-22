@@ -14,12 +14,14 @@ Description: File containing the implementation for the built-in commands liike 
 #include <signal.h>
 
 void pwd() {              // Implements the pwd function. Prints the current working directory
+  using namespace std;
   char cwd[512];
   getcwd(cwd, sizeof(cwd));          // Gets the current working directory
   cout << cwd << endl;
 }
 
-void cd(const vector<string>& args) {              // Implements the change directory function
+void cd(const std::vector<std::string>& args) {              // Implements the change directory function
+  using namespace std;
   if (args.size() < 2) {          // Checks if an argument has been entered. If no argument was given, then it has no directory to move to
     cerr << "Missing directory to change to." << endl;          // Prints the error if no argument is given
   }
@@ -28,11 +30,46 @@ void cd(const vector<string>& args) {              // Implements the change dire
   } 
 }
 
-void echo(vector<string>& args) {            // Implements the echo function. Writes arguments to the standard output
-  for (int i = 1; i < args.size(); i++) {          // Iterates through each argument after the echo function call
-    cout << args[i] << " ";          // Prints the arguments to the echo call separated by a space
-  }
-  cout << endl;
+void echo(std::vector<std::string>& args) {
+    using namespace std;
+    bool newline = true;
+    size_t start = 0;           // inits
+
+    if (!args.empty() && args[0] == "-n") {     // for case of -n to supress newlines
+        newline = false;
+        start = 1;
+    }
+
+    for (size_t i = start; i < args.size(); i++) {          // for each arg
+        for (size_t j = 0; j < args[i].length(); j++) {     // for each char
+            if (args[i][j] == '\\' && j + 1 < args[i].length()) { // to validly detect escape sequences (cpp uses \\ to indicate '\')
+                switch (args[i][j + 1]) {
+                    case 'n':
+                        cout << '\n';
+                        j++;
+                        break;
+                    case 't':
+                        cout << '\t';
+                        j++;
+                        break;
+                    case '\\':
+                        cout << '\\';
+                        j++;
+                        break;
+                    default:
+                        cout << args[i][j];
+                        break;
+                }
+            } else {
+                cout << args[i][j];
+            }
+        }
+        if (i < args.size() - 1) {
+            cout << " ";
+        }
+    }
+
+    if (newline) {
+        cout << endl;
+    }
 }
-
-
