@@ -15,66 +15,82 @@ using namespace std;
 
 // function declarations
 vector<string> tokenize(string &someString);
-vector<vector<string>> commandParser(vector<string> tokens);
-void executor(vector<vector<string>> userCommands);
+vector<vector<string> > commandParser(vector<string> tokens);
+void executor(vector<vector<string> > userCommands);
 
 
 int main(){
     vector<string> tokens;
-
     string input;
 
     while (1){
         cout << "[QUASH]$ ";
         getline(cin, input);
         tokens = tokenize(input);
-        vector<vector<string>> userCommands = commandParser(tokens);
+        vector<vector<string> > userCommands = commandParser(tokens);
+
+        // Print out the commands
+        for (int i = 0; i < userCommands.size(); i++) {
+            for (int j = 0; j < userCommands[i].size(); j++) {
+                cout << userCommands[i][j] << " ";
+            }
+            cout << endl;
+        }
     }
 
     return 0;   
 }
 
 
-vector<string> tokenize(string &someString){
-    // separates the input string in to words
+vector<string> tokenize(string &someString) {
+    // separates the input string into words
     vector<string> tokens;
     string token;
-    for (int i = 0; i < someString.length(); i++)
-        if (someString[i] != ' '){
-            token += (someString[i]);
+    bool in_quotes = false;
+
+    for (int i = 0; i < someString.length(); i++) {
+        if (someString[i] == '"') {
+            in_quotes = !in_quotes;
+        } else if (someString[i] != ' ' || in_quotes) {
+            token += someString[i];
+        } else {
+            if (!token.empty()) {
+                tokens.push_back(token);
+                token.clear();
+            }
         }
-        else{
-            tokens.push_back(token);
-            token.clear();
-        }
+    }
+    if (!token.empty()) {
+        tokens.push_back(token);
+    }
     return tokens;
 }
 
-
-vector<vector<string>> commandParser(vector<string> tokens){
+vector<vector<string> > commandParser(vector<string> tokens) {
     // parses words and parameters into commands
-    vector<vector<string>> userCommands;
+    vector<vector<string> > userCommands;
     vector<string> currentCommand;
 
-    for (int i = 0; i < tokens.size(); i++){                                            // for each token, if a token is special
-        if (tokens[i] == "|" || tokens[i] == "<" || tokens[i] == ">" || tokens[i] == ">>"){
-            if (!currentCommand.empty()){                                               // and there is a command being built already
-                userCommands.push_back(currentCommand);                                 // push the previous command to commands vector
-                currentCommand.clear();                                                 // clear the current command vector
+    for (size_t i = 0; i < tokens.size(); i++) {
+        if (tokens[i] == "|" || tokens[i] == "<" || tokens[i] == ">" || tokens[i] == ">>") {
+            if (!currentCommand.empty()) {
+                userCommands.push_back(currentCommand);
+                currentCommand.clear();
             }
-            userCommands.push_back(vector<string>{tokens[i]});                          // push the special character to the command vector on its own
-        }
-        else{
-            currentCommand.push_back(tokens[i]);                                        // if no special characters are incurred then just continue building current command
+            currentCommand.push_back(tokens[i]);
+            userCommands.push_back(currentCommand);
+            currentCommand.clear();
+        } else {
+            currentCommand.push_back(tokens[i]);
         }
     }
-    if (!currentCommand.empty()){                                                       // if a command was still being built, push it to commands vector
+    if (!currentCommand.empty()) {
         userCommands.push_back(currentCommand);
     }
-    return userCommands;                                                                // return command vector
+    return userCommands;
 }
 
-
-void executor(vector<vector<string>> userCommands){
+void executor(vector<vector<string> > userCommands) {
     // executes the given commands
+    // Implementation needed
 }
