@@ -6,7 +6,7 @@
 # Description: Makefile for quash shell
 
 
-compiler = clang++
+compiler = g++
 flags = -Wall -g -o
 target = execute
 source = execute.cpp
