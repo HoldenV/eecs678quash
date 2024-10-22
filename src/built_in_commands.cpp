@@ -12,26 +12,38 @@ Description: File containing the implementation for the built-in commands liike 
 #include <cstdlib>
 #include <iostream>
 #include <signal.h>
+#include <unistd.h>
 
 void pwd() {              // Implements the pwd function. Prints the current working directory
   using namespace std;
   char cwd[512];
-  getcwd(cwd, sizeof(cwd));          // Gets the current working directory
-  cout << cwd << endl;
-}
-
-void cd(const std::vector<std::string>& args) {              // Implements the change directory function
-  using namespace std;
-  if (args.size() < 2) {          // Checks if an argument has been entered. If no argument was given, then it has no directory to move to
-    cerr << "Missing directory to change to." << endl;          // Prints the error if no argument is given
+  if (getcwd(cwd, sizeof(cwd)) != nullptr) {
+    cout << cwd << endl;
   }
   else {
-    chdir(args[1]);          // If an argument is given, change the current directory to it
-  } 
+    cerr << "Error getting current working directory" << endl;
+  }
 }
+
+
+void cd(const std::vector<std::string>& args) {              // Implements the change directory function
+    using namespace std;
+    cout << "testprint";
+    if (args.empty()) {
+        cerr << "cd: missing argument" << endl;
+        return;
+    }
+
+    const char* path = args[0].c_str();
+    if (chdir(path) != 0) {
+        perror("cd");
+    }
+}
+
 
 void echo(std::vector<std::string>& args) {
     using namespace std;
+    cout << "testprint";
     bool newline = true;
     size_t start = 0;           // inits
 
@@ -42,7 +54,7 @@ void echo(std::vector<std::string>& args) {
 
     for (size_t i = start; i < args.size(); i++) {          // for each arg
         for (size_t j = 0; j < args[i].length(); j++) {     // for each char
-            if (args[i][j] == '\\' && j + 1 < args[i].length()) { // to validly detect escape sequences (cpp uses \\ to indicate '\')
+            if (args[i][j] == '\\' && j + 1 < args[i].length()) { // to validly detect escape sequences (c++ uses \\ to indicate '\')
                 switch (args[i][j + 1]) {
                     case 'n':
                         cout << '\n';
