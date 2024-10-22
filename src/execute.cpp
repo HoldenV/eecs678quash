@@ -7,16 +7,19 @@ File: execute.cpp
 Description: This is the main executable for our project. It runs the quash shell 
 */
 
+#include "built_in_commands.h"
+
 #include <string>
 #include <iostream>
 #include <vector>
+#include <unistd.h>
 
 using namespace std;
 
 // function declarations
 vector<string> tokenize(string &someString);
-vector<vector<string> > commandParser(vector<string> tokens);
-void executor(vector<vector<string> > userCommands);
+vector<vector<string> > command_parser(vector<string> tokens);
+void executor(vector<vector<string> > user_commands);
 
 
 int main(){
@@ -26,18 +29,28 @@ int main(){
     while (1){
         cout << "[QUASH]$ ";
         getline(cin, input);
+        cout << "input: " << input << endl;
+
         tokens = tokenize(input);
-        vector<vector<string> > userCommands = commandParser(tokens);
-
-        // Print out the commands
-        for (int i = 0; i < userCommands.size(); i++) {
-            for (int j = 0; j < userCommands[i].size(); j++) {
-                cout << userCommands[i][j] << " ";
-            }
-            cout << endl;
+        cout << "tokens: "; 
+        for (int i = 0; i < tokens.size(); i++){
+            cout << tokens[i] << ", ";
         }
-    }
+        cout << endl;
 
+        vector<vector<string> > user_commands = command_parser(tokens);
+        cout << "Commands: ";
+        for (int i = 0; i < user_commands.size(); i++){
+            for (int j = 0; j < user_commands[i].size(); j++){
+                cout << user_commands[i][j] << " ";
+            }
+            cout << ", ";
+        }
+        cout << endl <<"begin execution: "<<endl << endl ;
+
+        executor(user_commands);
+
+    }
     return 0;   
 }
 
@@ -66,31 +79,67 @@ vector<string> tokenize(string &someString) {
     return tokens;
 }
 
-vector<vector<string> > commandParser(vector<string> tokens) {
+vector<vector<string> > command_parser(vector<string> tokens) {
     // parses words and parameters into commands
-    vector<vector<string> > userCommands;
+    vector<vector<string> > user_commands;
     vector<string> currentCommand;
 
     for (size_t i = 0; i < tokens.size(); i++) {
         if (tokens[i] == "|" || tokens[i] == "<" || tokens[i] == ">" || tokens[i] == ">>") {
             if (!currentCommand.empty()) {
-                userCommands.push_back(currentCommand);
+                user_commands.push_back(currentCommand);
                 currentCommand.clear();
             }
             currentCommand.push_back(tokens[i]);
-            userCommands.push_back(currentCommand);
+            user_commands.push_back(currentCommand);
             currentCommand.clear();
         } else {
             currentCommand.push_back(tokens[i]);
         }
     }
     if (!currentCommand.empty()) {
-        userCommands.push_back(currentCommand);
+        user_commands.push_back(currentCommand);
     }
-    return userCommands;
+    return user_commands;
 }
 
-void executor(vector<vector<string> > userCommands) {
+
+void executor(vector<vector<string> > user_commands) {
     // executes the given commands
-    // Implementation needed
+    for (int i = 0; i < user_commands.size(); i++) {
+        if (user_commands[i].empty()) {
+            continue;
+        }
+
+        pid_t pid = fork();
+        if (pid == -1) {
+            cerr << "Fork Failed" << endl;
+            continue;
+        } else if (pid == 0) {
+            // Child process
+            vector<string> args; // init args
+            for (int j = 0; j < user_commands[i].size(); j++) { // for all strings in command
+                args.push_back(user_commands[i][j]); // add strings from command to args
+            }
+
+            // Convert vector<string> to vector<char*>
+            vector<char*> c_args;
+            for (int j = 0; j < args.size(); j++) {
+                c_args.push_back(const_cast<char*>(args[j].c_str()));
+            }
+            c_args.push_back(nullptr); // execvp expects a null-terminated array
+
+            // Execute the command
+            if (execvp(c_args[0], c_args.data()) == -1) {
+                cerr << "Command execution failed: " << user_commands[i][0] << endl;
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            // Parent process
+            int status;
+            if (waitpid(pid, &status, 0) == -1) {
+                cerr << "Waitpid failed" << endl;
+            }
+        }
+    }
 }
