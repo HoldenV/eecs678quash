@@ -7,7 +7,7 @@ File: builtInCommands.cpp
 Description: File containing the implementation for the built-in commands liike pwd, cd, etc.
 */
 
-#include "builtInCommands.h"      // Include the header file
+#include "built_in_commands.h"      // Include the header file
 
 #include <cstdlib>
 #include <iostream>
