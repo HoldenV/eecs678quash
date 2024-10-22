@@ -13,12 +13,14 @@ Description: This is the main executable for our project. It runs the quash shel
 
 int main(){
     using namespace std;
+    while(1) {
 
-    cout << "[QUASH]$ ";
+        cout << "[QUASH]$ ";
 
-    string input;
-    cin >> input;
+        string input;
+        cin >> input;
 
-    cout << input;
-    return 0;
+        cout << input << endl;
+    }
+    return 0;   
 }
