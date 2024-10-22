@@ -16,4 +16,5 @@ Description: This is the header file for built_in_commands.cpp which contains th
 void pwd();
 void cd(const std::vector<std::string>& args);
 void echo(std::vector<std::string>& args);
+void my_export(const std::vector<std::string>& args);
 #endif

@@ -7,7 +7,7 @@ File: builtInCommands.cpp
 Description: File containing the implementation for the built-in commands liike pwd, cd, etc.
 */
 
-#include "built_in_commands.h"      // Include the header file
+#include "built_in_commands.hpp"      // Include the header file
 
 #include <cstdlib>
 #include <iostream>
@@ -26,24 +26,28 @@ void pwd() {              // Implements the pwd function. Prints the current wor
 }
 
 
-void cd(const std::vector<std::string>& args) {              // Implements the change directory function
+void cd(const std::vector<std::string> &args) {
     using namespace std;
-    cout << "testprint";
-    if (args.empty()) {
-        cerr << "cd: missing argument" << endl;
-        return;
+    const char* path;
+
+    if (args.empty() || args[0].empty()) {
+        path = "..";  // Default to .. when no directory is provided
+        if (path == nullptr) {
+            cerr << "Error: no further .. available" << endl;
+            return;
+        }
+    } else {
+        path = args[0].c_str();
     }
 
-    const char* path = args[0].c_str();
     if (chdir(path) != 0) {
-        perror("cd");
+        cerr << "error changing directories";
     }
 }
 
 
-void echo(std::vector<std::string>& args) {
+void echo(std::vector<std::string> &args) {
     using namespace std;
-    cout << "testprint";
     bool newline = true;
     size_t start = 0;           // inits
 
@@ -85,3 +89,6 @@ void echo(std::vector<std::string>& args) {
         cout << endl;
     }
 }
+
+
+void my_export(const std::vector<std::string> &args){}

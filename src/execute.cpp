@@ -29,16 +29,19 @@ int main(){
     while (1){
         cout << "[QUASH]$ ";
         getline(cin, input);
-        cout << "input: " << input << endl;
+        // cout << "input: " << input << endl;
 
         tokens = tokenize(input);
+        /*
         cout << "tokens: "; 
         for (int i = 0; i < tokens.size(); i++){
             cout << tokens[i] << ", ";
         }
         cout << endl;
+        */
 
         vector<vector<string> > user_commands = command_parser(tokens);
+        /*
         cout << "Commands: ";
         for (int i = 0; i < user_commands.size(); i++){
             for (int j = 0; j < user_commands[i].size(); j++){
@@ -47,6 +50,7 @@ int main(){
             cout << ", ";
         }
         cout << endl <<"begin execution: "<<endl << endl ;
+        */
 
         executor(user_commands);
 
@@ -104,10 +108,49 @@ vector<vector<string> > command_parser(vector<string> tokens) {
 }
 
 
+bool execute_builtin(const vector<string> &command) {
+    if (command.empty()) return false;
+
+    vector<string> args;
+    for (int i = 1; i < command.size(); i++) {
+        args.push_back(command[i]);
+    }
+    args.push_back(""); // execvp expects a null-terminated array
+
+    const string &cmd = command[0];
+    if (cmd == "cd") {
+        cd(args);
+        return true;
+    } 
+    else if (cmd == "pwd") {
+        pwd();
+        return true;
+    } 
+    else if (cmd == "echo") {
+        echo(const_cast<vector<string>&>(command)); // echo expects a non-const reference
+        return true;
+    }
+    else if (cmd == "quit" || cmd == "exit") {
+        exit(0);
+        return true;
+    }
+    else if (cmd == "export") {
+        my_export(args);
+        return true;
+    }
+    return false;
+}
+
+
 void executor(vector<vector<string> > user_commands) {
     // executes the given commands
     for (int i = 0; i < user_commands.size(); i++) {
         if (user_commands[i].empty()) {
+            continue;
+        }
+
+        // Check and execute built-in commands
+        if (execute_builtin(user_commands[i])) {
             continue;
         }
 
