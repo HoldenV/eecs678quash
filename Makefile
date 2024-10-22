@@ -8,6 +8,7 @@
 
 compiler = g++
 flags = -Wall -g -o
+paths = -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 
 target = execute
 source = execute.cpp
 
@@ -17,6 +18,9 @@ run:
 
 all:
 	$(compiler) $(flags) $(target) $(source)
+
+mac:
+	$(compiler) $(paths) $(flags) $(target) $(source)
 
 clean:
 	rm -f $(target)
