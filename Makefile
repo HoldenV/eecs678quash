@@ -6,24 +6,23 @@
 # Description: Makefile for quash shell
 
 
-CC = gcc
-CFLAGS = -Wall -g
-TARGET = quash
-SRC = quash.c
+compiler = clang++
+flags = -Wall -g -o
+target = execute
+source = execute.cpp
 
-run: $(TARGET)
-	./$(TARGET)
+run:
+	./$(target)
 
 
-all: $(TARGET)
+all:
+	$(compiler) $(flags) $(target) $(source)
 
-$(TARGET): $(SRC)
-	$(CC) $(CFLAGS) -o $(TARGET) $(SRC)
-
+clean:
+	rm -f $(target)
 
 test:
 # Do all the actions define in the requirements
 
-clean:
-	rm -f $(TARGET)
+
 
