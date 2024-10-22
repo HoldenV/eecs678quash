@@ -1,3 +1,12 @@
+/*
+Author: Blake Carlson
+Date: 10-22-2024
+Class: EECS 678
+Assignment: Quash Project
+File: builtInCommands.cpp
+Description: File containing the implementation for the built-in commands liike pwd, cd, etc.
+*/
+
 #include "builtInCommands.h"      // Include the header file
 
 #include <cstdlib>
