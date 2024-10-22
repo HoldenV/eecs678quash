@@ -13,6 +13,9 @@ Description: This is the main executable for our project. It runs the quash shel
 #include <iostream>
 #include <vector>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
 
 using namespace std;
 
@@ -65,7 +68,7 @@ vector<string> tokenize(string &someString) {
     string token;
     bool in_quotes = false;
 
-    for (int i = 0; i < someString.length(); i++) {
+    for (size_t i = 0; i < someString.length(); i++) {
         if (someString[i] == '"') {
             in_quotes = !in_quotes;
         } else if (someString[i] != ' ' || in_quotes) {
@@ -112,7 +115,7 @@ bool execute_builtin(const vector<string> &command) {
     if (command.empty()) return false;
 
     vector<string> args;
-    for (int i = 1; i < command.size(); i++) {
+    for (size_t i = 1; i < command.size(); i++) {
         args.push_back(command[i]);
     }
     args.push_back(""); // execvp expects a null-terminated array
@@ -144,7 +147,7 @@ bool execute_builtin(const vector<string> &command) {
 
 void executor(vector<vector<string> > user_commands) {
     // executes the given commands
-    for (int i = 0; i < user_commands.size(); i++) {
+    for (size_t i = 0; i < user_commands.size(); i++) {
         if (user_commands[i].empty()) {
             continue;
         }
@@ -161,13 +164,13 @@ void executor(vector<vector<string> > user_commands) {
         } else if (pid == 0) {
             // Child process
             vector<string> args; // init args
-            for (int j = 0; j < user_commands[i].size(); j++) { // for all strings in command
+            for (size_t j = 0; j < user_commands[i].size(); j++) { // for all strings in command
                 args.push_back(user_commands[i][j]); // add strings from command to args
             }
 
             // Convert vector<string> to vector<char*>
             vector<char*> c_args;
-            for (int j = 0; j < args.size(); j++) {
+            for (size_t j = 0; j < args.size(); j++) {
                 c_args.push_back(const_cast<char*>(args[j].c_str()));
             }
             c_args.push_back(nullptr); // execvp expects a null-terminated array
