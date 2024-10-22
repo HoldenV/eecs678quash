@@ -57,7 +57,7 @@ vector<vector<string>> commandParser(vector<string> tokens){
     vector<string> currentCommand;
 
     for (int i = 0; i < tokens.size(); i++){                                            // for each token, if a token is special
-        if (tokens[i] == "|" || tokens[i] == "<" || tokens[i] == ">" || tokens[i] = ">>"){
+        if (tokens[i] == "|" || tokens[i] == "<" || tokens[i] == ">" || tokens[i] == ">>"){
             if (!currentCommand.empty()){                                               // and there is a command being built already
                 userCommands.push_back(currentCommand);                                 // push the previous command to commands vector
                 currentCommand.clear();                                                 // clear the current command vector
