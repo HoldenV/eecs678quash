@@ -90,4 +90,5 @@ void my_export(const std::vector<std::string> &args){
     int result = setenv(var_name.c_str(), var_value.c_str(), 1);            // Sets/Modifies the environment variable. The 1 says to overwrite the variable if it already exists
     if (result != 0) {                // If it succeeds in modifying the value then result should be 0. If its not 0 that means it fails and an error is printed
         cerr << "Error: failed to set the environment variable" << endl;
+    }
 }
