@@ -14,8 +14,9 @@ Description: File containing the implementation for the built-in commands liike 
 #include <signal.h>
 #include <unistd.h>
 
+using namespace std;
+
 void pwd() {
-    using namespace std;
     char cwd[512];
     if (getcwd(cwd, sizeof(cwd)) != nullptr) {
         cout << cwd << endl;
@@ -26,7 +27,6 @@ void pwd() {
 
 
 void cd(const std::vector<std::string> &args) {
-    using namespace std;
     const char* path = args.empty() ? ".." : args[0].c_str();
 
     if (chdir(path) != 0) {
@@ -36,7 +36,6 @@ void cd(const std::vector<std::string> &args) {
 
 
 void echo(std::vector<std::string> &args) {
-    using namespace std;
     bool newline = true;
     size_t start = 0;           // inits
 
