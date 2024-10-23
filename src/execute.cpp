@@ -75,6 +75,17 @@ vector<string> tokenize(string &someString) {
             token += someString[i];
         } else {
             if (!token.empty()) {
+                // Adding the following block to hopefully implement environment variable functionality.
+                
+                //Adding a check to see if the first character of the token is '$' (environment variable)
+                if (token[0] == '$') {
+                    char* value = getenv(token.substr(1).c_str());        // Turns the rest of the value into the remainder of the env variable. $HOME -> HOME
+                    if (value) {                // If value is not null, set the token to the value, otherwise make it an empty string
+                        token = value;
+                    } else {
+                        token = "";
+                    }
+                }
                 tokens.push_back(token);
                 token.clear();
             }
