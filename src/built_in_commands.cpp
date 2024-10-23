@@ -45,21 +45,21 @@ void echo(std::vector<std::string> &args) {
         start = 1;
     }
 
-    for (size_t i = start; i < args.size(); i++) {          // for each arg
+    for (size_t i = start; i < args.size(); i++) {          // for each string
         for (size_t j = 0; j < args[i].length(); j++) {     // for each char
-            if (args[i][j] == '\\' && j + 1 < args[i].length()) { // to validly detect escape sequences (c++ uses \\ to indicate '\')
-                switch (args[i][j + 1]) {
+            if (args[i][j] == '\\' && j + 2 < args[i].length()) {
+                switch (args[i][j + 2]) {
                     case 'n':
                         cout << '\n';
-                        j++;
+                        j+=2;
                         break;
                     case 't':
                         cout << '\t';
-                        j++;
+                        j+=2;
                         break;
                     case '\\':
                         cout << '\\';
-                        j++;
+                        j+=2;
                         break;
                     default:
                         cout << args[i][j];
