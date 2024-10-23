@@ -14,33 +14,23 @@ Description: File containing the implementation for the built-in commands liike 
 #include <signal.h>
 #include <unistd.h>
 
-void pwd() {              // Implements the pwd function. Prints the current working directory
+void pwd() {
     using namespace std;
     char cwd[512];
     if (getcwd(cwd, sizeof(cwd)) != nullptr) {
-    cout << cwd << endl;
-    }
-    else {
-    cerr << "Error getting current working directory" << endl;
+        cout << cwd << endl;
+    } else {
+        perror("getcwd");
     }
 }
 
 
 void cd(const std::vector<std::string> &args) {
     using namespace std;
-    const char* path;
-    if (args.empty() || args[0].empty()) {
-        path = "..";  // Default to .. when no directory is provided
-        if (path == nullptr) {
-            cerr << "Error: no further .. available" << endl;
-            return;
-        }
-    } else {
-        path = args[0].c_str();
-    }
+    const char* path = args.empty() ? ".." : args[0].c_str();
 
     if (chdir(path) != 0) {
-        cerr << "error changing directories";
+        perror("chdir");
     }
 }
 

@@ -114,11 +114,7 @@ vector<vector<string> > command_parser(vector<string> tokens) {
 bool execute_builtin(const vector<string> &command) {
     if (command.empty()) return false;
 
-    vector<string> args;
-    for (size_t i = 1; i < command.size(); i++) {
-        args.push_back(command[i]);
-    }
-    args.push_back(""); // execvp expects a null-terminated array
+    vector<string> args(command.begin() + 1, command.end());
 
     const string &cmd = command[0];
     if (cmd == "cd") {
@@ -146,6 +142,11 @@ bool execute_builtin(const vector<string> &command) {
 
 
 void executor(vector<vector<string> > user_commands) {
+
+    // inits
+    int pipe_fds[2];
+    int prev_pipe_read_end = -1;
+
     // executes the given commands
     for (size_t i = 0; i < user_commands.size(); i++) {
         if (user_commands[i].empty()) {
@@ -157,12 +158,37 @@ void executor(vector<vector<string> > user_commands) {
             continue;
         }
 
+        // Checks if next command is a pipe
+        bool is_pipe = (i < user_commands.size() - 1 && user_commands[i + 1].size() == 1 && user_commands[i + 1][0] == "|");
+
+        // Create a pipe if the next command is a pipe
+        if (is_pipe) {
+            if (pipe(pipe_fds) == -1) {
+                cerr << "Pipe creation failed" << endl;
+                return;
+            }
+        }
+
         pid_t pid = fork();
         if (pid == -1) {
             cerr << "Fork Failed" << endl;
             continue;
         } else if (pid == 0) {
             // Child process
+
+            // If not the first command and the previous command was a pipe, read from the previous pipe
+            if (prev_pipe_read_end != -1) {
+                dup2(prev_pipe_read_end, STDIN_FILENO);
+                close(prev_pipe_read_end);
+            }
+
+            // If the next command is a pipe, write to the pipe
+            if (is_pipe) {
+                close(pipe_fds[0]); // Close unused read end
+                dup2(pipe_fds[1], STDOUT_FILENO);
+                close(pipe_fds[1]);
+            }
+
             vector<string> args; // init args
             for (size_t j = 0; j < user_commands[i].size(); j++) { // for all strings in command
                 args.push_back(user_commands[i][j]); // add strings from command to args
@@ -180,12 +206,33 @@ void executor(vector<vector<string> > user_commands) {
                 cerr << "Command execution failed: " << user_commands[i][0] << endl;
                 exit(EXIT_FAILURE);
             }
+        } 
+        else {
+        // Parent process
+
+        // Close the previous pipe read end if it exists
+        if (prev_pipe_read_end != -1) {
+            close(prev_pipe_read_end);
+        }
+
+        // If the next command is a pipe, update the previous pipe read end
+        if (is_pipe) {
+            close(pipe_fds[1]); // Close unused write end
+            prev_pipe_read_end = pipe_fds[0];
         } else {
-            // Parent process
-            int status;
-            if (waitpid(pid, &status, 0) == -1) {
-                cerr << "Waitpid failed" << endl;
-            }
+            prev_pipe_read_end = -1; // Reset if no pipe
+        }
+
+        // Wait for the child process to finish
+        int status;
+        if (waitpid(pid, &status, 0) == -1) {
+            cerr << "Waitpid failed" << endl;
+        }
+
+        // Skip the pipe character in the next iteration
+        if (is_pipe) {
+            i++;
+        }
         }
     }
 }
