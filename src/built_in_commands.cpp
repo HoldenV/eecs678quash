@@ -64,6 +64,15 @@ void echo(std::vector<std::string> &args) {
                         cout << args[i][j];
                         break;
                 }
+            } else if (args[i][j] == '$') {             // Checks for an environment variable
+                string var_name = args[i].substr(j+1);
+                char* value = getenv(var_name.c_str());
+                if (value) {
+                    cout << value;
+                } else {
+                    cout << "";
+                }
+                break;
             } else {
                 cout << args[i][j];
             }
@@ -79,13 +88,20 @@ void echo(std::vector<std::string> &args) {
 }
 
 void my_export(const std::vector<std::string> &args){
-    if (args.size() != 2) {            // The command should only accept 2 arguments
+    if (args.size() != 1) {            // The command should only accept 2 arguments
         cerr << "Error: invalid input. should be VAR=value" << endl;
+        return;
     }
-    size_t equals_position = args[1].find('=');            // Make a size_t variable that stores the position on the equal sign
+    size_t equals_position = args[0].find('=');            // Make a size_t variable that stores the position on the equal sign
 
-    string var_name = args[1].substr(0, equals_position);            // The name of the environment variable is whats on the left of the equal sign
-    string var_value = args[1].substr(equals_position + 1);            // The value of the environment variable is whats on the right of the equal sign
+
+    if (equals_position == std::string::npos) {  // If no '=' is found
+        cerr << "Error: invalid input. should be VAR=value" << endl;
+        return;
+    }
+
+    string var_name = args[0].substr(0, equals_position);            // The name of the environment variable is whats on the left of the equal sign
+    string var_value = args[0].substr(equals_position + 1);            // The value of the environment variable is whats on the right of the equal sign
 
     int result = setenv(var_name.c_str(), var_value.c_str(), 1);            // Sets/Modifies the environment variable. The 1 says to overwrite the variable if it already exists
     if (result != 0) {                // If it succeeds in modifying the value then result should be 0. If its not 0 that means it fails and an error is printed
