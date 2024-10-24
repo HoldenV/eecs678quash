@@ -83,6 +83,7 @@ vector<string> tokenize(string &someString) {
                     if (value) {                // If value is not null, set the token to the value, otherwise make it an empty string
                         token = value;
                     } else {
+                        cerr << "Environment variable not found: " << token.substr(1) << endl;
                         token = "";
                     }
                 }
@@ -153,12 +154,9 @@ bool execute_builtin(const vector<string> &command) {
 
 
 void executor(vector<vector<string> > user_commands) {
-
-    // inits
     int pipe_fds[2];
     int prev_pipe_read_end = -1;
 
-    // executes the given commands
     for (size_t i = 0; i < user_commands.size(); i++) {
         if (user_commands[i].empty()) {
             continue;
