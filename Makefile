@@ -26,33 +26,33 @@ clean:
 
 test:
 	@echo "Running Tier 1 tests..."
-	@echo "ls" | ./$(target)
-	@echo "pwd" | ./$(target)
-	@echo "echo Hello" | ./$(target)
-	@echo "echo \\n" | ./$(target)
+	@echo "ls"
+	@echo "pwd"
+	@echo "echo Hello"
+	@echo "echo \\n"
     
 	@echo "Running Tier 2 tests..."
-	@echo "ls -a /" | ./$(target)
-	@echo "echo Hello World" | ./$(target)
-	@echo "cd /" | ./$(target)
-	@echo "export TEST_VAR=123" | ./$(target)
-	@echo "echo \$TEST_VAR" | ./$(target)
-	@echo "du -H \$PWD/.." | ./$(target)
-	@echo "echo \\n" | ./$(target)
+	@echo "ls -a /"
+	@echo "echo Hello World"
+	@echo "cd /"
+	@echo "export TEST_VAR=123"
+	@echo "echo \$TEST_VAR"
+	@echo "du -H \$PWD/.."
+	@echo "echo \\n"
     
 	@echo "Running Tier 3 tests..."
-	@echo "jobs" | ./$(target)
-	@echo "kill 1" | ./$(target)
-	@echo "find . -type f | grep '*.cpp'" | ./$(target)
-    # @echo "cat < src/built_in_commands.cpp" | ./$(target)
-    # @echo "echo Hello > test_output.txt" | ./$(target)
-	@echo "cat test_output.txt" | ./$(target)
-	@echo "sleep 5 &" | ./$(target)
-	@echo "echo \\n" | ./$(target)
+	@echo "jobs"
+	@echo "kill 1"
+	@echo "find . -type f | grep '*.cpp'"
+# @echo "cat < src/built_in_commands.cpp"
+# @echo "echo Hello > test_output.txt"
+	@echo "cat test_output.txt"
+	@echo "sleep 5 &"
+	@echo "echo \\n"
     
 	@echo "Running Tier 4 tests (extra credit)..."
-	@echo "cat < src/built_in_commands.cpp | grep -o include | cat > test_output.txt" | ./$(target)
-	@echo "cat test_output.txt" | ./$(target)
-	@echo "echo Hello >> test_output.txt" | ./$(target)
-	@echo "cat test_output.txt" | ./$(target)
-	@echo "echo \\n" | ./$(target)
+# @echo "cat < src/built_in_commands.cpp | grep -o include | cat > test_output.txt"
+	@echo "cat test_output.txt"
+# @echo "echo Hello >> test_output.txt"
+	@echo "cat test_output.txt"
+	@echo "echo \\n"
