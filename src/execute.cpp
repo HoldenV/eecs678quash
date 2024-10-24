@@ -15,6 +15,10 @@ Description: This is the main executable for our project. It runs the quash shel
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <cerrno>
+#include <cstring>
 
 
 using namespace std;
@@ -26,7 +30,6 @@ void executor(vector<vector<string> > user_commands);
 
 
 int main(){
-
     // Includes the signal handler for SIGCHLD
     signal(SIGCHLD, sigchild_handler);
 
@@ -35,33 +38,15 @@ int main(){
 
     while (1){
         cout << "[QUASH]$ ";
+        cout.flush();
         if (!getline(cin, input)) {
             break;
         }
+        cout << "\n";
 
         tokens = tokenize(input);
-        /*
-        cout << "tokens: "; 
-        for (int i = 0; i < tokens.size(); i++){
-            cout << tokens[i] << ", ";
-        }
-        cout << endl;
-        */
-
         vector<vector<string> > user_commands = command_parser(tokens);
-        /*
-        cout << "Commands: ";
-        for (int i = 0; i < user_commands.size(); i++){
-            for (int j = 0; j < user_commands[i].size(); j++){
-                cout << user_commands[i][j] << " ";
-            }
-            cout << ", ";
-        }
-        cout << endl <<"begin execution: "<<endl << endl ;
-        */
-
         executor(user_commands);
-
     }
     return 0;   
 }
@@ -102,10 +87,13 @@ vector<string> tokenize(string &someString) {
     return tokens;
 }
 
+
 vector<vector<string> > command_parser(vector<string> tokens) {
     // parses words and parameters into commands
     vector<vector<string> > user_commands;
     vector<string> currentCommand;
+    string outputFile;
+    bool append = false;
 
     for (size_t i = 0; i < tokens.size(); i++) {
         if (tokens[i] == "|" || tokens[i] == "<" || tokens[i] == ">" || tokens[i] == ">>") {
@@ -113,9 +101,16 @@ vector<vector<string> > command_parser(vector<string> tokens) {
                 user_commands.push_back(currentCommand);
                 currentCommand.clear();
             }
-            currentCommand.push_back(tokens[i]);
-            user_commands.push_back(currentCommand);
-            currentCommand.clear();
+            if (tokens[i] == ">" || tokens[i] == ">>") {
+                if (i + 1 < tokens.size()) {
+                    outputFile = tokens[i + 1];
+                    append = (tokens[i] == ">>");
+                    i++; // Skip the filename token
+                } else {
+                    cerr << "Syntax error: expected filename after " << tokens[i] << endl;
+                    return user_commands;
+                }
+            }
         } else {
             currentCommand.push_back(tokens[i]);
         }
@@ -123,6 +118,13 @@ vector<vector<string> > command_parser(vector<string> tokens) {
     if (!currentCommand.empty()) {
         user_commands.push_back(currentCommand);
     }
+
+    // Store the output file and append flag in the last command
+    if (!user_commands.empty() && !outputFile.empty()) {
+        user_commands.back().push_back(outputFile);
+        user_commands.back().push_back(append ? ">>" : ">");
+    }
+
     return user_commands;
 }
 
@@ -156,6 +158,11 @@ bool execute_builtin(const vector<string> &command) {
     // Added jobs as a builtin command that lists the jobs when the jobs command is called
     else if (cmd == "jobs") {
         list_jobs();
+        return true;
+    }
+    // Added clear as a builtin command that clears the terminal screen
+    else if (cmd == "clear") {
+        my_clear();
         return true;
     }
     return false;
@@ -200,7 +207,7 @@ void executor(vector<vector<string> > user_commands) {
         pid_t pid = fork();
         if (pid == -1) {
             cerr << "Fork Failed" << endl;
-            continue;
+            exit(EXIT_FAILURE);
         } else if (pid == 0) {
             // Child process
 
@@ -215,6 +222,41 @@ void executor(vector<vector<string> > user_commands) {
                 close(pipe_fds[0]); // Close unused read end
                 dup2(pipe_fds[1], STDOUT_FILENO);
                 close(pipe_fds[1]);
+            }
+
+            // Handle file redirection
+            for (size_t j = 0; j < user_commands[i].size(); j++) {
+                if (user_commands[i][j] == ">") {
+                    int fd = open(user_commands[i][j + 1].c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+                    if (fd == -1) {
+                        cerr << "Failed to open file for output redirection: " << user_commands[i][j + 1] << endl;
+                        exit(EXIT_FAILURE);
+                    }
+                    dup2(fd, STDOUT_FILENO);
+                    close(fd);
+                    user_commands[i].erase(user_commands[i].begin() + j, user_commands[i].begin() + j + 2);
+                    j--;
+                } else if (user_commands[i][j] == ">>") {
+                    int fd = open(user_commands[i][j + 1].c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644);
+                    if (fd == -1) {
+                        cerr << "Failed to open file for output redirection: " << user_commands[i][j + 1] << endl;
+                        exit(EXIT_FAILURE);
+                    }
+                    dup2(fd, STDOUT_FILENO);
+                    close(fd);
+                    user_commands[i].erase(user_commands[i].begin() + j, user_commands[i].begin() + j + 2);
+                    j--;
+                } else if (user_commands[i][j] == "<") {
+                    int fd = open(user_commands[i][j + 1].c_str(), O_RDONLY);
+                    if (fd == -1) {
+                        cerr << "Failed to open file for input redirection: " << user_commands[i][j + 1] << endl;
+                        exit(EXIT_FAILURE);
+                    }
+                    dup2(fd, STDIN_FILENO);
+                    close(fd);
+                    user_commands[i].erase(user_commands[i].begin() + j, user_commands[i].begin() + j + 2);
+                    j--;
+                }
             }
 
             vector<string> args; // init args
@@ -264,12 +306,14 @@ void executor(vector<vector<string> > user_commands) {
         if (is_background_job) {
             add_job(pid, user_commands[i][0]);
             //cout << "Job added: [" << pid << "]" << endl;
-        } else {
+        } 
+        else if (is_background_job){
             int job_status;
             if (waitpid(pid, &job_status, 0) == -1) {
                 cerr << "Waitpid failed" << endl;
             }
         }
+        
 
         // Skip the pipe character in the next iteration
         if (is_pipe) {

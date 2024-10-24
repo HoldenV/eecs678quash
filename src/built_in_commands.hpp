@@ -13,8 +13,11 @@ Description: This is the header file for built_in_commands.cpp which contains th
 #include <string>
 #include <vector>
 
+using namespace std;
+
 void pwd();
-void cd(const std::vector<std::string>& args);
-void echo(std::vector<std::string>& args);
-void my_export(const std::vector<std::string>& args);
+void cd(const vector<string>& args);
+void echo(vector<string>& args);
+void my_export(const vector<string>& args);
+void my_clear();
 #endif

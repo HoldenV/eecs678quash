@@ -108,3 +108,11 @@ void my_export(const vector<string> &args){
         cerr << "Error: failed to set the environment variable" << endl;
     }
 }
+
+
+void my_clear() {
+    const char* clear_command = "\033[H\033[J"; // ANSI escape code to clear the screen
+
+    write(STDOUT_FILENO, clear_command, strlen(clear_command));
+    fflush(stdout);
+}
