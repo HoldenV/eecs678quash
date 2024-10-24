@@ -26,7 +26,7 @@ void pwd() {
 }
 
 
-void cd(const std::vector<std::string> &args) {
+void cd(const vector<string> &args) {
     const char* path = args.empty() ? ".." : args[0].c_str();
 
     if (chdir(path) != 0) {
@@ -35,7 +35,7 @@ void cd(const std::vector<std::string> &args) {
 }
 
 
-void echo(std::vector<std::string> &args) {
+void echo(vector<string> &args) {
     bool newline = true;
     size_t start = 0;           // inits
 
@@ -46,8 +46,8 @@ void echo(std::vector<std::string> &args) {
 
     for (size_t i = start; i < args.size(); i++) {          // for each string
         for (size_t j = 0; j < args[i].length(); j++) {     // for each char
-            if (args[i][j] == '\\' && j + 2 < args[i].length()) {
-                switch (args[i][j + 2]) {
+            if (args[i][j] == '\\' && j + 1 < args[i].length()) {
+                switch (args[i][j + 1]) {
                     case 'n':
                         cout << '\n';
                         j+=2;
@@ -87,7 +87,7 @@ void echo(std::vector<std::string> &args) {
     }
 }
 
-void my_export(const std::vector<std::string> &args){
+void my_export(const vector<string> &args){
     if (args.size() != 1) {            // The command should only accept 2 arguments
         cerr << "Error: invalid input. should be VAR=value" << endl;
         return;

@@ -6,8 +6,8 @@
       "type": "lldb",
       "request": "launch",
       "args": [],
-      "cwd": "/Users/holdenvail/Documents/currentClasses/EECS_678/eecs678project1",
-      "program": "/Users/holdenvail/Documents/currentClasses/EECS_678/eecs678project1/build/Debug/outDebug"
+      "cwd": "/Users/holdenvail/Documents/currentClasses/EECS_678/eecs678project1/src",
+      "program": "/Users/holdenvail/Documents/currentClasses/EECS_678/eecs678project1/src/build/Debug/outDebug"
     }
   ]
 }

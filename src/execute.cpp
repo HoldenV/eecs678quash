@@ -35,8 +35,9 @@ int main(){
 
     while (1){
         cout << "[QUASH]$ ";
-        getline(cin, input);
-        // cout << "input: " << input << endl;
+        if (!getline(cin, input)) {
+            break;
+        }
 
         tokens = tokenize(input);
         /*
