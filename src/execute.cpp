@@ -8,7 +8,7 @@ Description: This is the main executable for our project. It runs the quash shel
 */
 
 #include "built_in_commands.hpp"
-
+#include "jobs.hpp"
 #include <string>
 #include <iostream>
 #include <vector>
@@ -26,6 +26,10 @@ void executor(vector<vector<string> > user_commands);
 
 
 int main(){
+
+    // Includes the signal handler for SIGCHLD
+    signal(SIGCHLD, sigchild_handler);
+
     vector<string> tokens;
     string input;
 
@@ -75,7 +79,7 @@ vector<string> tokenize(string &someString) {
             token += someString[i];
         } else {
             if (!token.empty()) {
-                // Adding the following block to hopefully implement environment variable functionality.
+                // Adding the following block to hopefully implement environment variable functionality
                 
                 //Adding a check to see if the first character of the token is '$' (environment variable)
                 if (token[0] == '$') {
@@ -83,7 +87,6 @@ vector<string> tokenize(string &someString) {
                     if (value) {                // If value is not null, set the token to the value, otherwise make it an empty string
                         token = value;
                     } else {
-                        cerr << "Environment variable not found: " << token.substr(1) << endl;
                         token = "";
                     }
                 }
@@ -149,14 +152,22 @@ bool execute_builtin(const vector<string> &command) {
         my_export(args);
         return true;
     }
+    // Added jobs as a builtin command that lists the jobs when the jobs command is called
+    else if (cmd == "jobs") {
+        list_jobs();
+        return true;
+    }
     return false;
 }
 
 
 void executor(vector<vector<string> > user_commands) {
+
+    // inits
     int pipe_fds[2];
     int prev_pipe_read_end = -1;
 
+    // executes the given commands
     for (size_t i = 0; i < user_commands.size(); i++) {
         if (user_commands[i].empty()) {
             continue;
@@ -165,6 +176,13 @@ void executor(vector<vector<string> > user_commands) {
         // Check and execute built-in commands
         if (execute_builtin(user_commands[i])) {
             continue;
+        }
+
+        // NOTE: ADDING FUNCTIONALITY FOR BACKGROUND JOB HANDLING! DELETE THE FOLLOWING BLOCK IF IT BREAKS FUNCTIONALITY!
+        bool is_background_job = false;
+        if (user_commands[i].back() == "&") {               // Checks if the end of the command is an & character. If so, it is a background job
+            is_background_job = true;
+            user_commands[i].pop_back();                // Removes the & character from the command now that it has been identified as a background job
         }
 
         // Checks if next command is a pipe
@@ -232,10 +250,24 @@ void executor(vector<vector<string> > user_commands) {
             prev_pipe_read_end = -1; // Reset if no pipe
         }
 
+        /*
+        This is commented out since the functionality gets replaced on whether the job is in the background or foreground. 
+        Code is being kept here incase the new implementation does not work.
         // Wait for the child process to finish
         int status;
         if (waitpid(pid, &status, 0) == -1) {
             cerr << "Waitpid failed" << endl;
+        }
+        */
+
+        if (is_background_job) {
+            add_job(pid, user_commands[i][0]);
+            //cout << "Job added: [" << pid << "]" << endl;
+        } else {
+            int job_status;
+            if (waitpid(pid, &job_status, 0) == -1) {
+                cerr << "Waitpid failed" << endl;
+            }
         }
 
         // Skip the pipe character in the next iteration
