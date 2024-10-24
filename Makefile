@@ -10,7 +10,7 @@ compiler = g++
 flags = -Wall -g -o
 paths = -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 
 target = execute
-source = src/execute.cpp src/built_in_commands.cpp
+source = src/execute.cpp src/built_in_commands.cpp src/jobs.cpp
 
 run:
 	./$(target)
