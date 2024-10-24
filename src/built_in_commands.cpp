@@ -7,7 +7,7 @@ File: builtInCommands.cpp
 Description: File containing the implementation for the built-in commands liike pwd, cd, etc.
 */
 
-#include "built_in_commands.hpp"      // Include the header file
+#include "built_in_commands.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -37,7 +37,7 @@ void cd(const vector<string> &args) {
 
 void echo(vector<string> &args) {
     bool newline = true;
-    size_t start = 0;           // inits
+    size_t start = 0;
 
     if (!args.empty() && args[0] == "-n") {     // for case of -n to supress newlines
         newline = false;
@@ -107,12 +107,4 @@ void my_export(const vector<string> &args){
     if (result != 0) {                // If it succeeds in modifying the value then result should be 0. If its not 0 that means it fails and an error is printed
         cerr << "Error: failed to set the environment variable" << endl;
     }
-}
-
-
-void my_clear() {
-    const char* clear_command = "\033[H\033[J"; // ANSI escape code to clear the screen
-
-    write(STDOUT_FILENO, clear_command, strlen(clear_command));
-    fflush(stdout);
 }

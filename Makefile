@@ -26,33 +26,67 @@ clean:
 
 test:
 	@echo "Running Tier 1 tests..."
-	@echo "ls"
-	@echo "pwd"
-	@echo "echo Hello"
-	@echo "echo \\n"
+	@echo "ls: " 
+	@echo "ls" | ./$(target)
+	@echo "\n"
+
+	@echo "pwd:"
+	@echo "pwd" | ./$(target)
+	@echo "\n"
+
+	@echo "echo Hello:"
+	@echo "echo Hello" | ./$(target)
+	@echo "\n"
     
 	@echo "Running Tier 2 tests..."
-	@echo "ls -a /"
-	@echo "echo Hello World"
-	@echo "cd /"
-	@echo "export TEST_VAR=123"
-	@echo "echo \$TEST_VAR"
-	@echo "du -H \$PWD/.."
-	@echo "echo \\n"
+	@echo "ls -a /:"
+	@echo "ls -a /" | ./$(target)
+	@echo "\n"
+
+	@echo "echo Hello World:"
+	@echo "echo Hello World" | ./$(target)
+	@echo "\n"
+
+	@echo "cd src:"
+	@echo "cd src" | ./$(target)
+	@echo "\n"
+
+	@echo "export TEST_VAR=123:"
+	@echo "export TEST_VAR=123" | ./$(target)
+	@echo "\n"
+
+# cannot write test to display test var due to needing escape characters to properly call environment variables withing a makefile. 
     
+# cannot show du -H $PWD for same reason as above 
+
 	@echo "Running Tier 3 tests..."
-	@echo "jobs"
-	@echo "kill 1"
-	@echo "find . -type f | grep '*.cpp'"
-# @echo "cat < src/built_in_commands.cpp"
-# @echo "echo Hello > test_output.txt"
-	@echo "cat test_output.txt"
-	@echo "sleep 5 &"
-	@echo "echo \\n"
+	@echo "jobs:"
+	@echo "jobs" | ./$(target)
+	@echo "\n"
+
+	@echo "kill:"
+	@echo "kill" | ./$(target)
+	@echo "\n"
+
+	@echo "echo Hello > test_output.txt:"
+	@echo "echo Hello > test_output.txt" | ./$(target)
+	@echo "\n"
+
+	@echo "ls | grep .txt"
+	@echo "ls | grep .txt" | ./$(target)
+	@echo "\n"
+
+	@echo "cat < test_output.txt:"
+	@echo "cat < test_output.txt" | ./$(target)
+	@echo "\n"
+
+	@echo "cat test_output.txt:"
+	@echo "cat test_output.txt" | ./$(target)
+	@echo "\n"
+
+	@echo "sleep 5 &:"
+	@echo "sleep 5 &" | ./$(target)
+	@echo "\n"
     
-	@echo "Running Tier 4 tests (extra credit)..."
-# @echo "cat < src/built_in_commands.cpp | grep -o include | cat > test_output.txt"
-	@echo "cat test_output.txt"
-# @echo "echo Hello >> test_output.txt"
-	@echo "cat test_output.txt"
-	@echo "echo \\n"
+# @echo "Running Tier 4 tests (extra credit)..."
+# TBD

@@ -19,5 +19,4 @@ void pwd();
 void cd(const vector<string>& args);
 void echo(vector<string>& args);
 void my_export(const vector<string>& args);
-void my_clear();
 #endif
