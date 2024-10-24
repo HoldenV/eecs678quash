@@ -4,7 +4,7 @@ Date: 10-22-2024
 Class: EECS 678
 Assignment: Quash Project
 File: builtInCommands.cpp
-Description: File containing the implementation for the built-in commands liike pwd, cd, etc.
+Description: File containing the implementation for the built-in commands like pwd, cd, etc.
 */
 
 #include "built_in_commands.hpp"
@@ -86,6 +86,7 @@ void echo(vector<string> &args) {
         cout << endl;
     }
 }
+
 
 void my_export(const vector<string> &args){
     if (args.size() != 1) {            // The command should only accept 2 arguments

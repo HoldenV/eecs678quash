@@ -19,6 +19,7 @@ Description: This is the main executable for our project. It runs the quash shel
 #include <sys/stat.h>
 #include <cerrno>
 #include <cstring>
+#include <signal.h>
 
 
 using namespace std;
