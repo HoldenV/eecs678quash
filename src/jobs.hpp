@@ -17,8 +17,10 @@ using namespace std;
 
 struct Job {
     int pid;             // Store the process id as an integer
+    int job_id;                // Stores the job id. 
     string command;             // The command is stored as a string
     bool is_currently_running;              // Whether the process is currently running or not is a boolean
+    bool been_printed_done;             // Keeps track of whether or not the job has been printed since finishing
 };
 
 void add_job(int pid, string& command);             // Adds a job
