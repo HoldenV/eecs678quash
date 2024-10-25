@@ -30,7 +30,8 @@ void pwd() {
 
 
 void cd(const vector<string> &args) {
-    const char* path = args.empty() ? ".." : args[0].c_str();
+    char* default_path = getenv("HOME");
+    const char* path = args.empty() ? default_path : args[0].c_str();
 
     if (chdir(path) != 0) {
         perror("chdir");

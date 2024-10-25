@@ -161,11 +161,6 @@ bool execute_builtin(const vector<string> &command) {
         list_jobs();
         return true;
     }
-    // Added clear as a builtin command that clears the terminal screen
-    else if (cmd == "clear") {
-        my_clear();
-        return true;
-    }
     return false;
 }
 
