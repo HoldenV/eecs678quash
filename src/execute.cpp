@@ -20,6 +20,7 @@ Description: This is the main executable for our project. It runs the quash shel
 #include <cerrno>
 #include <cstring>
 
+
 using namespace std;
 
 // function declarations
@@ -27,14 +28,15 @@ vector<string> tokenize(string &someString);
 vector<vector<string> > command_parser(vector<string> tokens);
 void executor(vector<vector<string> > user_commands);
 
-int main() {
+
+int main(){
     // Includes the signal handler for SIGCHLD
     signal(SIGCHLD, sigchild_handler);
 
     vector<string> tokens;
     string input;
 
-    while (1) {
+    while (1){
         cout << "[QUASH]$ ";
         cout.flush();
         if (!getline(cin, input)) {
@@ -50,6 +52,7 @@ int main() {
     return 0;   
 }
 
+
 vector<string> tokenize(string &someString) {
     // separates the input string into words
     vector<string> tokens;
@@ -63,10 +66,12 @@ vector<string> tokenize(string &someString) {
             token += someString[i];
         } else {
             if (!token.empty()) {
-                // Adding a check for environment variables
+                // Adding the following block to hopefully implement environment variable functionality
+                
+                //Adding a check to see if the first character of the token is '$' (environment variable)
                 if (token[0] == '$') {
-                    char* value = getenv(token.substr(1).c_str());
-                    if (value) {
+                    char* value = getenv(token.substr(1).c_str());        // Turns the rest of the value into the remainder of the env variable. $HOME -> HOME
+                    if (value) {                // If value is not null, set the token to the value, otherwise make it an empty string
                         token = value;
                     } else {
                         token = "";
@@ -82,6 +87,7 @@ vector<string> tokenize(string &someString) {
     }
     return tokens;
 }
+
 
 vector<vector<string> > command_parser(vector<string> tokens) {
     // parses words and parameters into commands
@@ -123,6 +129,7 @@ vector<vector<string> > command_parser(vector<string> tokens) {
     return user_commands;
 }
 
+
 bool execute_builtin(const vector<string> &command) {
     if (command.empty()) return false;
 
@@ -149,38 +156,48 @@ bool execute_builtin(const vector<string> &command) {
         my_export(args);
         return true;
     }
+    // Added jobs as a builtin command that lists the jobs when the jobs command is called
     else if (cmd == "jobs") {
         list_jobs();
+        return true;
+    }
+    // Added clear as a builtin command that clears the terminal screen
+    else if (cmd == "clear") {
+        my_clear();
         return true;
     }
     return false;
 }
 
+
 void executor(vector<vector<string> > user_commands) {
 
+    // inits
     int pipe_fds[2];
     int prev_pipe_read_end = -1;
 
+    // executes the given commands
     for (size_t i = 0; i < user_commands.size(); i++) {
         if (user_commands[i].empty()) {
             continue;
         }
 
-        // Re-enable builtin commands here
+        // Check and execute built-in commands
         if (execute_builtin(user_commands[i])) {
             continue;
         }
 
-        // Background job check
+        // NOTE: ADDING FUNCTIONALITY FOR BACKGROUND JOB HANDLING! DELETE THE FOLLOWING BLOCK IF IT BREAKS FUNCTIONALITY!
         bool is_background_job = false;
-        if (user_commands[i].back() == "&") {
+        if (user_commands[i].back() == "&") {               // Checks if the end of the command is an & character. If so, it is a background job
             is_background_job = true;
-            user_commands[i].pop_back();
+            user_commands[i].pop_back();                // Removes the & character from the command now that it has been identified as a background job
         }
 
-        // Pipe check
+        // Checks if next command is a pipe
         bool is_pipe = (i < user_commands.size() - 1 && user_commands[i + 1].size() == 1 && user_commands[i + 1][0] == "|");
 
+        // Create a pipe if the next command is a pipe
         if (is_pipe) {
             if (pipe(pipe_fds) == -1) {
                 cerr << "Pipe creation failed" << endl;
@@ -194,18 +211,21 @@ void executor(vector<vector<string> > user_commands) {
             exit(EXIT_FAILURE);
         } else if (pid == 0) {
             // Child process
+
+            // If not the first command and the previous command was a pipe, read from the previous pipe
             if (prev_pipe_read_end != -1) {
                 dup2(prev_pipe_read_end, STDIN_FILENO);
                 close(prev_pipe_read_end);
             }
 
+            // If the next command is a pipe, write to the pipe
             if (is_pipe) {
-                close(pipe_fds[0]);
+                close(pipe_fds[0]); // Close unused read end
                 dup2(pipe_fds[1], STDOUT_FILENO);
                 close(pipe_fds[1]);
             }
 
-            // Fix redirection issues by closing unnecessary file descriptors and moving file handling here
+            // Handle file redirection
             for (size_t j = 0; j < user_commands[i].size(); j++) {
                 if (user_commands[i][j] == ">") {
                     int fd = open(user_commands[i][j + 1].c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -240,14 +260,9 @@ void executor(vector<vector<string> > user_commands) {
                 }
             }
 
-            // Execute custom built-ins
-            if (execute_builtin(user_commands[i])) {
-                continue;
-            }
-
-            vector<string> args;
-            for (size_t j = 0; j < user_commands[i].size(); j++) {
-                args.push_back(user_commands[i][j]);
+            vector<string> args; // init args
+            for (size_t j = 0; j < user_commands[i].size(); j++) { // for all strings in command
+                args.push_back(user_commands[i][j]); // add strings from command to args
             }
 
             // Convert vector<string> to vector<char*>
