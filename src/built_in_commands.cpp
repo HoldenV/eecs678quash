@@ -30,7 +30,8 @@ void pwd() {
 
 
 void cd(const vector<string> &args) {
-    const char* path = args.empty() ? ".." : args[0].c_str();
+    char* default_path = getenv("HOME");
+    const char* path = args.empty() ? default_path : args[0].c_str();
 
     if (chdir(path) != 0) {
         perror("chdir");
@@ -42,7 +43,7 @@ void echo(vector<string> &args) {
     bool newline = true;
     size_t start = 0;           // inits
 
-    if (!args.empty() && args[0] == "-n") {     // for case of -n to supress newlines
+    if (args.empty() || args[0] == "-n") {     // for case of -n to supress newlines
         newline = false;
         start = 1;
     }
@@ -80,15 +81,15 @@ void echo(vector<string> &args) {
                 cout << args[i][j];
             }
         }
-        if (i < args.size() - 1) {
+        if (i < args.size()) {
             cout << " ";
         }
     }
-
     if (newline) {
         cout << endl;
     }
 }
+
 
 void my_export(const vector<string> &args){
     if (args.size() != 1) {            // The command should only accept 2 arguments
