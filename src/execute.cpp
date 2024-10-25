@@ -300,10 +300,15 @@ void executor(vector<vector<string> > user_commands) {
         */
 
         if (is_background_job) {
-            add_job(pid, user_commands[i][0]);
-            //cout << "Job added: [" << pid << "]" << endl;
-        } 
-        else {              // Changed from else if to just an else statement. 
+            // Concatenate all parts of the command into a single string
+            string full_command;
+            for (size_t j = 0; j < user_commands[i].size(); j++) {
+                if (j > 0) full_command += " "; // Add spaces between parts
+                full_command += user_commands[i][j];
+            }
+            full_command += " &";
+            add_job(pid, full_command);  // Pass the full command to add_job
+        } else {              // Changed from else if to just an else statement. 
             int job_status;
             if (waitpid(pid, &job_status, 0) == -1) {
                 cerr << "Waitpid failed" << endl;
