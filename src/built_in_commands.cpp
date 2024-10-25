@@ -4,15 +4,18 @@ Date: 10-22-2024
 Class: EECS 678
 Assignment: Quash Project
 File: builtInCommands.cpp
-Description: File containing the implementation for the built-in commands like pwd, cd, etc.
+Description: File containing the implementation for the built-in commands liike pwd, cd, etc.
 */
 
-#include "built_in_commands.hpp"
+#include "built_in_commands.hpp"      // Include the header file
 
 #include <cstdlib>
 #include <iostream>
 #include <signal.h>
 #include <unistd.h>
+
+// Testing to fix compile issues
+#include <cstring>
 
 using namespace std;
 
@@ -37,7 +40,7 @@ void cd(const vector<string> &args) {
 
 void echo(vector<string> &args) {
     bool newline = true;
-    size_t start = 0;
+    size_t start = 0;           // inits
 
     if (!args.empty() && args[0] == "-n") {     // for case of -n to supress newlines
         newline = false;
@@ -87,7 +90,6 @@ void echo(vector<string> &args) {
     }
 }
 
-
 void my_export(const vector<string> &args){
     if (args.size() != 1) {            // The command should only accept 2 arguments
         cerr << "Error: invalid input. should be VAR=value" << endl;
@@ -108,4 +110,12 @@ void my_export(const vector<string> &args){
     if (result != 0) {                // If it succeeds in modifying the value then result should be 0. If its not 0 that means it fails and an error is printed
         cerr << "Error: failed to set the environment variable" << endl;
     }
+}
+
+
+void my_clear() {
+    const char* clear_command = "\033[H\033[J"; // ANSI escape code to clear the screen
+
+    write(STDOUT_FILENO, clear_command, strlen(clear_command));
+    fflush(stdout);
 }

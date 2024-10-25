@@ -19,17 +19,18 @@ Description: This is the main executable for our project. It runs the quash shel
 #include <sys/stat.h>
 #include <cerrno>
 #include <cstring>
-#include <signal.h>
 
 
 using namespace std;
 
+// function declarations
 vector<string> tokenize(string &someString);
 vector<vector<string> > command_parser(vector<string> tokens);
 void executor(vector<vector<string> > user_commands);
 
 
 int main(){
+    // Includes the signal handler for SIGCHLD
     signal(SIGCHLD, sigchild_handler);
 
     vector<string> tokens;
@@ -37,22 +38,23 @@ int main(){
 
     while (1){
         cout << "[QUASH]$ ";
-
+        cout.flush();
         if (!getline(cin, input)) {
             break;
         }
-        cout << endl;
+
+        // Commented out to fix the skipping lines issue. cout << "\n";
 
         tokens = tokenize(input);
         vector<vector<string> > user_commands = command_parser(tokens);
         executor(user_commands);
-
     }
     return 0;   
 }
 
 
 vector<string> tokenize(string &someString) {
+    // separates the input string into words
     vector<string> tokens;
     string token;
     bool in_quotes = false;
@@ -64,6 +66,8 @@ vector<string> tokenize(string &someString) {
             token += someString[i];
         } else {
             if (!token.empty()) {
+                // Adding the following block to hopefully implement environment variable functionality
+                
                 //Adding a check to see if the first character of the token is '$' (environment variable)
                 if (token[0] == '$') {
                     char* value = getenv(token.substr(1).c_str());        // Turns the rest of the value into the remainder of the env variable. $HOME -> HOME
@@ -86,6 +90,7 @@ vector<string> tokenize(string &someString) {
 
 
 vector<vector<string> > command_parser(vector<string> tokens) {
+    // parses words and parameters into commands
     vector<vector<string> > user_commands;
     vector<string> currentCommand;
     string outputFile;
@@ -143,7 +148,7 @@ bool execute_builtin(const vector<string> &command) {
         echo(args);
         return true;
     }
-    else if (cmd == "quit" || cmd == "exit" || cmd == "kill") {
+    else if (cmd == "quit" || cmd == "exit") {
         exit(0);
         return true;
     }
@@ -156,11 +161,18 @@ bool execute_builtin(const vector<string> &command) {
         list_jobs();
         return true;
     }
+    // Added clear as a builtin command that clears the terminal screen
+    else if (cmd == "clear") {
+        my_clear();
+        return true;
+    }
     return false;
 }
 
 
 void executor(vector<vector<string> > user_commands) {
+
+    // inits
     int pipe_fds[2];
     int prev_pipe_read_end = -1;
 
@@ -175,8 +187,9 @@ void executor(vector<vector<string> > user_commands) {
             continue;
         }
 
+        // NOTE: ADDING FUNCTIONALITY FOR BACKGROUND JOB HANDLING! DELETE THE FOLLOWING BLOCK IF IT BREAKS FUNCTIONALITY!
         bool is_background_job = false;
-        if (user_commands[i].back() == "&") {           // Checks if the end of the command is an & character. If so, it is a background job
+        if (user_commands[i].back() == "&") {               // Checks if the end of the command is an & character. If so, it is a background job
             is_background_job = true;
             user_commands[i].pop_back();                // Removes the & character from the command now that it has been identified as a background job
         }
@@ -281,17 +294,28 @@ void executor(vector<vector<string> > user_commands) {
             prev_pipe_read_end = -1; // Reset if no pipe
         }
 
+        /*
+        This is commented out since the functionality gets replaced on whether the job is in the background or foreground. 
+        Code is being kept here incase the new implementation does not work.
+        // Wait for the child process to finish
+        int status;
+        if (waitpid(pid, &status, 0) == -1) {
+            cerr << "Waitpid failed" << endl;
+        }
+        */
+
         if (is_background_job) {
             add_job(pid, user_commands[i][0]);
             //cout << "Job added: [" << pid << "]" << endl;
         } 
-        else if (is_background_job){
+        else {              // Changed from else if to just an else statement. 
             int job_status;
             if (waitpid(pid, &job_status, 0) == -1) {
                 cerr << "Waitpid failed" << endl;
             }
         }
         
+
         // Skip the pipe character in the next iteration
         if (is_pipe) {
             i++;

@@ -16,6 +16,9 @@ Description: This is the header file for jobs.cpp which contains the implementat
 #include <signal.h>
 #include <unistd.h>
 
+//Testing to fix compile issues
+#include <cstring>
+
 using namespace std;
 
 
@@ -55,6 +58,8 @@ void sigchild_handler(int sig) {                // Takes a signal number that is
                     const char* msg = "Job finished.\n";
                     write(STDOUT_FILENO, msg, strlen(msg));
                     job_list.erase(job_list.begin() + i);               // Remove the job from the list
+                    cout << "[QUASH]$ ";                // Reprint the [QUASH]$ message and flush again once a background process has finished
+                    cout.flush();
                 }
                 break;              // Break out of the loop once the finished job is updated
             }
