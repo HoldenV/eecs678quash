@@ -34,3 +34,9 @@ To run the project, run the following command: make run
 
 ## How to test all functionality
 To test all the functions of the project, run the following command: make test
+
+## What we have implemented (full and partial)
+- all tier 1 functionality
+- all tier 2 functionality
+- all tier 3 functionality (besides kill)
+- most of tier 4
