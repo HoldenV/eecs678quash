@@ -84,23 +84,29 @@ vector<string> tokenize(string &someString) {
 
 
 vector<vector<string> > command_parser(vector<string> tokens) {
-    // parses tokens into commands
     vector<vector<string> > user_commands;
     vector<string> currentCommand;
 
-    for (size_t i = 0; i < tokens.size(); i++) { // for each token 
-        if (tokens[i] == "|" || tokens[i] == "<" || tokens[i] == ">" || tokens[i] == ">>") { // if a token is special
-            if (!currentCommand.empty()) { // push any previous command
+    for (size_t i = 0; i < tokens.size(); i++) {
+        if (tokens[i] == "|") {
+            if (!currentCommand.empty()) {
                 user_commands.push_back(currentCommand);
                 currentCommand.clear();
             }
-            currentCommand.push_back(tokens[i]); // start new command with special token
-        } 
+            // Don't add the pipe symbol as a separate command
+        }
+        else if (tokens[i] == "<" || tokens[i] == ">" || tokens[i] == ">>") {
+            if (!currentCommand.empty()) {
+                user_commands.push_back(currentCommand);
+                currentCommand.clear();
+            }
+            currentCommand.push_back(tokens[i]);
+        }
         else {
-            currentCommand.push_back(tokens[i]); // else, continue pushing tokens (should be the function or args)
+            currentCommand.push_back(tokens[i]);
         }
     }
-    if (!currentCommand.empty()) {  // make sure to push the last command
+    if (!currentCommand.empty()) {
         user_commands.push_back(currentCommand);
     }
 
@@ -152,17 +158,15 @@ bool execute_builtin(vector<string> &command) {
 
 void executor(vector<vector<string> > user_commands) {
     int pipe_fds[2];                   // init file descriptor arrays
-    bool read_previous = false;            // init prev pipe read indicator
-    
+    int prev_pipe_read = -1;  // Store the read end of the previous pipe
 
     for (size_t i = 0; i < user_commands.size(); i++) { // for each command 
-
         int saved_stdout = dup(STDOUT_FILENO); // Save the original stdout file descriptor
         int saved_stdin = dup(STDIN_FILENO);   // Save stdin as well
 
         // Background proccess handling
         bool is_background_job = false;
-        if (user_commands[i].back() == "&") {
+        if (!user_commands[i].empty() && user_commands[i].back() == "&") {
             is_background_job = true;
             user_commands[i].pop_back();
         }
@@ -171,24 +175,27 @@ void executor(vector<vector<string> > user_commands) {
             continue;
         }
 
-        // Pipe handling
-        bool is_pipe = ((i < user_commands.size() - 1 && user_commands[i + 1][0] == "|") || read_previous); // if it is not last command and next command is a pipe
-        if (is_pipe) {
-            pipe(pipe_fds);
-            // read_previous = true;  // The *next* command will read.
-            // user_commands.erase(user_commands.begin() + i + 1); // erase pipe from commmands
+        // Check if this command pipes to the next one
+        bool pipes_to_next = (i < user_commands.size() - 1);
+
+        // Create new pipe if needed
+        if (pipes_to_next) {
+            if (pipe(pipe_fds) == -1) {
+                cerr << "Pipe creation failed" << endl;
+                return;
+            }
         }
 
         // File redirection
         if (i + 1 < user_commands.size() && user_commands[i + 1][0] == ">") { // if the next command begins with >
             if (user_commands[i + 1].size() < 2) {
-            cerr << "No file specified for redirection" << endl;
-            return;
+                cerr << "No file specified for redirection" << endl;
+                return;
             }
             int fd = open(user_commands[i + 1][1].c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644); // open new file with filename
             if (fd == -1) {
-            cerr << "Failed to open file for writing: " << user_commands[i + 1][1] << endl; // or error
-            return;
+                cerr << "Failed to open file for writing: " << user_commands[i + 1][1] << endl; // or error
+                return;
             }
             dup2(fd, STDOUT_FILENO); // set stdout to the new file
             close(fd);
@@ -197,13 +204,13 @@ void executor(vector<vector<string> > user_commands) {
 
         if (i + 1 < user_commands.size() && user_commands[i + 1][0] == ">>") { // if the next command begins with >>
             if (user_commands[i + 1].size() < 2) {
-            cerr << "No file specified for redirection" << endl;
-            return;
+                cerr << "No file specified for redirection" << endl;
+                return;
             }
             int fd = open(user_commands[i + 1][1].c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644); // open existing file with filename
             if (fd == -1) {
-            cerr << "Failed to open file for appending: " << user_commands[i + 1][1] << endl; // or error
-            return;
+                cerr << "Failed to open file for appending: " << user_commands[i + 1][1] << endl; // or error
+                return;
             }
             dup2(fd, STDOUT_FILENO); // set stdout to the file
             close(fd);
@@ -212,13 +219,13 @@ void executor(vector<vector<string> > user_commands) {
 
         if (i + 1 < user_commands.size() && user_commands[i + 1][0] == "<") { // if the next command begins with <
             if (user_commands[i + 1].size() < 2) {
-            cerr << "No file specified for redirection" << endl;
-            return;
+                cerr << "No file specified for redirection" << endl;
+                return;
             }
             int fd = open(user_commands[i + 1][1].c_str(), O_RDONLY); // open file for reading with filename
             if (fd == -1) {
-            cerr << "Failed to open file for reading: " << user_commands[i + 1][1] << endl;
-            return;
+                cerr << "Failed to open file for reading: " << user_commands[i + 1][1] << endl;
+                return;
             }
             dup2(fd, STDIN_FILENO); // set stdin to file
             close(fd);
@@ -227,6 +234,13 @@ void executor(vector<vector<string> > user_commands) {
 
         // check and execute any custom built-ins
         if (execute_builtin(user_commands[i])) { 
+            if (prev_pipe_read != -1) {
+                close(prev_pipe_read);
+            }
+            if (pipes_to_next) {
+                close(pipe_fds[0]);
+                close(pipe_fds[1]);
+            }
             continue;
         }
 
@@ -239,15 +253,17 @@ void executor(vector<vector<string> > user_commands) {
         else if (pid == 0) {
             //child process block
 
-            // pipe handling for child processes
-            if (read_previous) {
-                dup2(pipe_fds[0], STDIN_FILENO); // Redirect stdin
-                close(pipe_fds[0]);  // Close read end in child
+            // Set up input from previous pipe if it exists
+            if (prev_pipe_read != -1) {
+                dup2(prev_pipe_read, STDIN_FILENO);
+                close(prev_pipe_read);
             }
 
-            if (i < user_commands.size() - 1 && user_commands[i + 1][0] == "|") {
-                dup2(pipe_fds[1], STDOUT_FILENO);  // Redirect stdout
-                close(pipe_fds[1]);   // Close write end in child
+            // Set up output to next pipe if it exists
+            if (pipes_to_next) {
+                dup2(pipe_fds[1], STDOUT_FILENO);
+                close(pipe_fds[0]);
+                close(pipe_fds[1]);
             }
 
             vector<char*> c_args;
@@ -260,40 +276,41 @@ void executor(vector<vector<string> > user_commands) {
                 cerr << "Command execution failed: " << user_commands[i][0] << endl;
                 exit(EXIT_FAILURE);
             }
-        } else if (is_background_job) {
-            // Handle background job
+        } 
+        else {
+            // Parent process
+
+            // Close previous pipe read end if it exists
+            if (prev_pipe_read != -1) {
+                close(prev_pipe_read);
+            }
+
+            // Close write end of current pipe and save read end for next iteration
+            if (pipes_to_next) {
+                close(pipe_fds[1]);
+                prev_pipe_read = pipe_fds[0];
+            }
+            else {
+                prev_pipe_read = -1;
+            }
+
+            if (is_background_job) {
+                // Handle background job
                 add_job(pid, user_commands[i][0]);
             } 
-            else if (is_background_job == false) { // Handling for foreground jobs
-                int job_status;
-                if (waitpid(pid, &job_status, 0) == -1) {
-                    cerr << "Waitpid failed" << endl;
-                }
+            else {
+                // Handle foreground job
+                int status;
+                waitpid(pid, &status, 0);
             }
-        else {
-            // parent process block
-            if (read_previous) {
-                close(pipe_fds[0]); // Close the read end from the *previous* pipe
-            }
-
-            // Important: Set read_previous *before* closing the write end!
-            if (i < user_commands.size() - 1 && user_commands[i+1][0] == "|") {
-                close(pipe_fds[1]);   // Close the write end of the *current* pipe
-            } else {
-                read_previous = false; // Reset if not piping to next command
-            }
-
-            int status;
-            waitpid(pid, &status, 0);
 
             // Restore stdin and stdout
             dup2(saved_stdin, STDIN_FILENO);
             dup2(saved_stdout, STDOUT_FILENO);
             close(saved_stdin);
             close(saved_stdout);
-            }
+        }
         // After the foreground job finishes, check for completed background jobs
         print_completed_jobs();
-        }
     }
-
+}
