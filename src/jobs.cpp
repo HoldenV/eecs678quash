@@ -31,26 +31,21 @@ void add_job(int pid, string& command) {                // Creates a new jobs an
     new_job.job_id = next_job_id++;         // Sets the jobs id as the next available id. Then increase it by 1 for the next job.
     new_job.command = command;
     new_job.is_currently_running = true;
-    new_job.been_printed_done = false;
+    new_job.completed = false;
 
     job_list.push_back(new_job);                // Uses the push_back function to add it to the global list of jobs
-    cout << "Background job started: [" << new_job.job_id << "] " << new_job.pid << " " << new_job.command << endl;
+    cout << "Background job started: [" << new_job.job_id << "] " << new_job.pid << " " << new_job.command << " &" << endl;
+    cout.flush();
 }
 
 void list_jobs() {
     for (size_t i = 0; i < job_list.size(); ) {
-        cout << "[" << job_list[i].job_id << "] ";
-        if (job_list[i].is_currently_running) {
-            cout << "Running " << job_list[i].command << endl;
-            i++; // Only increment if not removing
-        } else {
-            cout << "Done " << job_list[i].command << endl;
-            job_list[i].been_printed_done = true;
-            // Remove the job if it has been printed as done
-            job_list.erase(job_list.begin() + i);
-        }
+        cout << "[" << job_list[i].job_id << "] " << job_list[i].pid << " " << job_list[i].command << " &" << endl;
+        cout.flush();
+        i++;
     }
 }
+
 
 
 void sigchild_handler(int sig) {                // Takes a signal number that is changing state
@@ -62,12 +57,22 @@ void sigchild_handler(int sig) {                // Takes a signal number that is
             if (job_list[i].pid == pid) {
                 if (WIFEXITED(status) || WIFSIGNALED(status)) {             // If the process has exited, either normally or through a signal, set its running status to false and print that it finished
                     job_list[i].is_currently_running = false;
-                    std::cout << "Completed: [" << job_list[i].job_id << "] " << job_list[i].pid << " " << job_list[i].command << std::endl;        // Print the job is completed with its info once it finishes
-                    cout << "[QUASH]$ ";            // Reprints the quash message and flushes output
-                    cout.flush();
+                    job_list[i].completed =  true;
                 }
                 break;              // Break out of the loop once the finished job is updated
             }
         }
     }
 }
+
+void print_completed_jobs() {               // Prints all the jobs that have finished since the last foreground task
+    for (size_t i = 0; i < job_list.size(); ) {
+        if (job_list[i].completed) {                    // If the job is commpleted print all the info
+            cout << "Completed: [" << job_list[i].job_id << "] " << job_list[i].pid << " " << job_list[i].command << " &" << endl;
+            job_list.erase(job_list.begin() + i); // Erase the job after printing
+        } else {
+            i++;
+        }
+    }
+}
+

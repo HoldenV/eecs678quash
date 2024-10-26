@@ -20,10 +20,11 @@ struct Job {
     int job_id;                // Stores the job id. 
     string command;             // The command is stored as a string
     bool is_currently_running;              // Whether the process is currently running or not is a boolean
-    bool been_printed_done;             // Keeps track of whether or not the job has been printed since finishing
+    bool completed;             // Keeps track of whether or not the job has been printed since finishing
 };
 
 void add_job(int pid, string& command);             // Adds a job
 void list_jobs();               // Returns all the jobs completed or running
 void sigchild_handler(int sig);                // Handles the SIGCHLD signals when they occur
+void print_completed_jobs();                // Prints the jobs that have finished since the last input
 #endif
