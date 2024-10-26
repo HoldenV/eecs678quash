@@ -167,7 +167,7 @@ void executor(vector<vector<string> > user_commands) {
         }
 
         // Pipe handling
-        bool is_pipe = (i < user_commands.size() - 1 && user_commands[i + 1][0] == "|" || read_previous); // if it is not last command and next command is a pipe
+        bool is_pipe = ((i < user_commands.size() - 1 && user_commands[i + 1][0] == "|") || read_previous); // if it is not last command and next command is a pipe
         if (is_pipe) {
             pipe(pipe_fds);
             // read_previous = true;  // The *next* command will read.
