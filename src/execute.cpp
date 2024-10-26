@@ -146,8 +146,8 @@ bool execute_builtin(vector<string> &command) {
 
 
 void executor(vector<vector<string> > user_commands) {
-    int pipe_fds[2];                        // init file descriptor array
-    int prev_pipe_read_end = -1;            // init prev pipe read indicator
+    int pipe_fds[2];                   // init file descriptor arrays
+    bool read_previous = false;            // init prev pipe read indicator
 
     for (size_t i = 0; i < user_commands.size(); i++) { // for each command 
 
@@ -164,19 +164,9 @@ void executor(vector<vector<string> > user_commands) {
 
         // Pipe handling
         bool is_pipe = (i < user_commands.size() - 1 && user_commands[i + 1][0] == "|"); // if it is not last command and next command is a pipe
-        if (is_pipe) {  // if function is supposed to go to pipe
-            if (pipe(pipe_fds) == -1) { // pipe file descriptors or error
-                cerr << "Pipe creation failed" << endl;
-                return;
-            }
-        dup2(pipe_fds[1], STDOUT_FILENO); // redirect all cout to pipe
-        prev_pipe_read_end = pipe_fds[0]; // set prev pipe read end for next function
-        close(prev_pipe_read_end);
-        }
-
-        if (prev_pipe_read_end != -1) { // if function is supposed to read from pipe
-            dup2(prev_pipe_read_end, STDIN_FILENO); // set stdin to the pipe
-            close(prev_pipe_read_end);
+        if (is_pipe) {
+            pipe(pipe_fds);
+            user_commands.erase(user_commands.begin() + i + 1); // erase pipe from commmands
         }
 
         // File redirection handling
@@ -238,6 +228,17 @@ void executor(vector<vector<string> > user_commands) {
         } 
         else if (pid == 0) {
             //child process block
+            // pipe handling for child processes
+            if (read_previous) {
+                dup2(pipe_fds[0], STDIN_FILENO); // Redirect stdin
+                close(pipe_fds[0]);  // Close read end in child
+            }
+
+            if (i < user_commands.size() - 1 && user_commands[i + 1][0] == "|") {
+                dup2(pipe_fds[1], STDOUT_FILENO);  // Redirect stdout
+                close(pipe_fds[1]);   // Close write end in child
+            }
+
             vector<char*> c_args;
             for (size_t j = 0; j < user_commands[i].size(); j++) { // for each string in command
                 c_args.push_back(const_cast<char*>(user_commands[i][j].c_str())); // push a char* to new vector c_args
@@ -251,8 +252,22 @@ void executor(vector<vector<string> > user_commands) {
         }
         else {
             // parent process block
+            if (read_previous) {
+                close(pipe_fds[0]); // Close the read end from the *previous* pipe
+            }
+
+            // Important: Set read_previous *before* closing the write end!
+            if (i < user_commands.size() - 1 && user_commands[i+1][0] == "|") {
+                read_previous = true;  // The *next* command will read.
+                close(pipe_fds[1]);   // Close the write end of the *current* pipe
+            } else {
+                read_previous = false; // Reset if not piping to next command
+            }
+
             int status;
-            waitpid(pid, &status, 0);   // wait for the child to execute
+            waitpid(pid, &status, 0);
+
+            
 
             // background job handling
             if (is_background_job) {
