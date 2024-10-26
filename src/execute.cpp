@@ -148,8 +148,12 @@ bool execute_builtin(vector<string> &command) {
 void executor(vector<vector<string> > user_commands) {
     int pipe_fds[2];                   // init file descriptor arrays
     bool read_previous = false;            // init prev pipe read indicator
+    
 
     for (size_t i = 0; i < user_commands.size(); i++) { // for each command 
+
+        int saved_stdout = dup(STDOUT_FILENO); // Save the original stdout file descriptor
+        int saved_stdin = dup(STDIN_FILENO);   // Save stdin as well
 
         // Background proccess handling
         bool is_background_job = false;
@@ -169,7 +173,7 @@ void executor(vector<vector<string> > user_commands) {
             user_commands.erase(user_commands.begin() + i + 1); // erase pipe from commmands
         }
 
-        // File redirection handling
+        // File redirection
         if (i + 1 < user_commands.size() && user_commands[i + 1][0] == ">") { // if the next command begins with >
             if (user_commands[i + 1].size() < 2) {
             cerr << "No file specified for redirection" << endl;
@@ -185,7 +189,8 @@ void executor(vector<vector<string> > user_commands) {
             user_commands.erase(user_commands.begin() + i + 1); // erase the command
             i--;
         } 
-        else if (i + 1 < user_commands.size() && user_commands[i + 1][0] == ">>") { // if the next command begins with >>
+
+        if (i + 1 < user_commands.size() && user_commands[i + 1][0] == ">>") { // if the next command begins with >>
             if (user_commands[i + 1].size() < 2) {
             cerr << "No file specified for redirection" << endl;
             return;
@@ -200,7 +205,8 @@ void executor(vector<vector<string> > user_commands) {
             user_commands.erase(user_commands.begin() + i + 1); // erase the command
             i--;
         } 
-        else if (i + 1 < user_commands.size() && user_commands[i + 1][0] == "<") { // if the next command begins with <
+
+        if (i + 1 < user_commands.size() && user_commands[i + 1][0] == "<") { // if the next command begins with <
             if (user_commands[i + 1].size() < 2) {
             cerr << "No file specified for redirection" << endl;
             return;
@@ -267,7 +273,11 @@ void executor(vector<vector<string> > user_commands) {
             int status;
             waitpid(pid, &status, 0);
 
-            
+            // Restore stdin and stdout
+            dup2(saved_stdin, STDIN_FILENO);
+            dup2(saved_stdout, STDOUT_FILENO);
+            close(saved_stdin);
+            close(saved_stdout);
 
             // background job handling
             if (is_background_job) {
