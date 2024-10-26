@@ -114,7 +114,6 @@ vector<vector<string> > command_parser(vector<string> tokens) {
 }
 
 
-// need to check and comment
 bool execute_builtin(vector<string> &command) {
     if (command.empty()){
         return false;
