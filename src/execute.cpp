@@ -119,22 +119,27 @@ bool execute_builtin(vector<string> &command) {
 
     if (cmd == "cd") {
         cd(args);
+        print_completed_jobs();
         return true;
     } 
     else if (cmd == "pwd") {
         pwd();
+        print_completed_jobs();
         return true;
     } 
     else if (cmd == "echo") {
         echo(args);
+        print_completed_jobs();
         return true;
     }
     else if (cmd == "quit" || cmd == "exit") {
         exit(0);
+        print_completed_jobs();
         return true;
     }
     else if (cmd == "export") {
         my_export(args);
+        print_completed_jobs();
         return true;
     }
     else if (cmd == "jobs") {
@@ -167,7 +172,7 @@ void executor(vector<vector<string> > user_commands) {
         }
 
         // Pipe handling
-        bool is_pipe = ((i < user_commands.size() - 1 && user_commands[i + 1][0] == "|") || read_previous); // if it is not last command and next command is a pipe
+        bool is_pipe = (i < user_commands.size() - 1 && user_commands[i + 1][0] == "|" || read_previous); // if it is not last command and next command is a pipe
         if (is_pipe) {
             pipe(pipe_fds);
             // read_previous = true;  // The *next* command will read.
@@ -255,7 +260,16 @@ void executor(vector<vector<string> > user_commands) {
                 cerr << "Command execution failed: " << user_commands[i][0] << endl;
                 exit(EXIT_FAILURE);
             }
-        }
+        } else if (is_background_job) {
+            // Handle background job
+                add_job(pid, user_commands[i][0]);
+            } 
+            else if (is_background_job == false) { // Handling for foreground jobs
+                int job_status;
+                if (waitpid(pid, &job_status, 0) == -1) {
+                    cerr << "Waitpid failed" << endl;
+                }
+            }
         else {
             // parent process block
             if (read_previous) {
@@ -277,17 +291,9 @@ void executor(vector<vector<string> > user_commands) {
             dup2(saved_stdout, STDOUT_FILENO);
             close(saved_stdin);
             close(saved_stdout);
-
-            // background job handling
-            if (is_background_job) {
-                string full_command;
-                for (size_t j = 0; j < user_commands[i].size(); j++) {
-                    if (j > 0) full_command += " ";
-                    full_command += user_commands[i][j];
-                }
-                full_command += " &";
-                add_job(pid, full_command);
             }
+        // After the foreground job finishes, check for completed background jobs
+        print_completed_jobs();
         }
     }
-}
+
