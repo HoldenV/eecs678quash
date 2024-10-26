@@ -15,8 +15,6 @@ Description: This is the header file for jobs.cpp which contains the implementat
 #include <string>
 #include <signal.h>
 #include <unistd.h>
-
-//Testing to fix compile issues
 #include <cstring>
 
 using namespace std;

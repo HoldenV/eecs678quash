@@ -13,8 +13,6 @@ Description: File containing the implementation for the built-in commands liike 
 #include <iostream>
 #include <signal.h>
 #include <unistd.h>
-
-// Testing to fix compile issues
 #include <cstring>
 
 using namespace std;

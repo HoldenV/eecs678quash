@@ -54,11 +54,7 @@ test:
 	@echo "export TEST_VAR=123:"
 	@echo "export TEST_VAR=123" | ./$(target)
 	@echo "\n"
-
-# cannot write test to display test var due to needing escape characters to properly call environment variables withing a makefile. 
-    
-# cannot show du -H $PWD for same reason as above 
-
+ 
 	@echo "Running Tier 3 tests..."
 	@echo "jobs:"
 	@echo "jobs" | ./$(target)
@@ -87,6 +83,3 @@ test:
 	@echo "sleep 5 &:"
 	@echo "sleep 5 &" | ./$(target)
 	@echo "\n"
-    
-# @echo "Running Tier 4 tests (extra credit)..."
-# TBD

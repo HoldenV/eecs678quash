@@ -295,7 +295,12 @@ void executor(vector<vector<string> > user_commands) {
 
             if (is_background_job) {
                 // Handle background job
-                add_job(pid, user_commands[i][0]);
+                string full_command;
+                for (size_t j = 0; j < user_commands[i].size(); j++) {
+                    if (j > 0) full_command += " ";
+                    full_command += user_commands[i][j];
+                }
+                add_job(pid, full_command);
             } 
             else {
                 // Handle foreground job
