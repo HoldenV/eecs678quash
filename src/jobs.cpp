@@ -62,6 +62,9 @@ void sigchild_handler(int sig) {                // Takes a signal number that is
             if (job_list[i].pid == pid) {
                 if (WIFEXITED(status) || WIFSIGNALED(status)) {             // If the process has exited, either normally or through a signal, set its running status to false and print that it finished
                     job_list[i].is_currently_running = false;
+                    std::cout << "Completed: [" << jobs_list[i].job_id << "] " << jobs_list[i].pid << " " << jobs_list[i].command << std::endl;        // Print the job is completed with its info once it finishes
+                    cout << "[QUASH]$ ";            // Reprints the quash message and flushes output
+                    cout.flush();
                 }
                 break;              // Break out of the loop once the finished job is updated
             }
