@@ -18,6 +18,8 @@ This project implements a shell called Quash. It supports various built-in comma
 - `src/execute.cpp`: Main executable for the project.
 - `src/built_in_commands.cpp`: Implementation of built-in commands.
 - `src/built_in_commands.hpp`: Header file for built-in commands.
+- `src/jobs.cpp`: Implementation for jobs and background processes.
+- `src/jobs.hpp`: Header file for jobs.
 - `Makefile`: Makefile for building the project.
 
 ## Dependencies
@@ -32,11 +34,3 @@ To run the project, run the following command: make run
 
 ## How to test all functionality
 To test all the functions of the project, run the following command: make test
-
-
-## Things we need to ensure work
-- File redirection with custom built ins
-- Pipes with background processes
-
-- The main thing we need to look at it order of execution within executor
-- Probably, check  pipes & redirection, background, built-in
