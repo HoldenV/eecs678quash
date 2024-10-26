@@ -167,10 +167,11 @@ void executor(vector<vector<string> > user_commands) {
         }
 
         // Pipe handling
-        bool is_pipe = (i < user_commands.size() - 1 && user_commands[i + 1][0] == "|"); // if it is not last command and next command is a pipe
+        bool is_pipe = (i < user_commands.size() - 1 && user_commands[i + 1][0] == "|" || read_previous); // if it is not last command and next command is a pipe
         if (is_pipe) {
             pipe(pipe_fds);
-            user_commands.erase(user_commands.begin() + i + 1); // erase pipe from commmands
+            // read_previous = true;  // The *next* command will read.
+            // user_commands.erase(user_commands.begin() + i + 1); // erase pipe from commmands
         }
 
         // File redirection
@@ -187,7 +188,6 @@ void executor(vector<vector<string> > user_commands) {
             dup2(fd, STDOUT_FILENO); // set stdout to the new file
             close(fd);
             user_commands.erase(user_commands.begin() + i + 1); // erase the command
-            i--;
         } 
 
         if (i + 1 < user_commands.size() && user_commands[i + 1][0] == ">>") { // if the next command begins with >>
@@ -203,7 +203,6 @@ void executor(vector<vector<string> > user_commands) {
             dup2(fd, STDOUT_FILENO); // set stdout to the file
             close(fd);
             user_commands.erase(user_commands.begin() + i + 1); // erase the command
-            i--;
         } 
 
         if (i + 1 < user_commands.size() && user_commands[i + 1][0] == "<") { // if the next command begins with <
@@ -234,6 +233,7 @@ void executor(vector<vector<string> > user_commands) {
         } 
         else if (pid == 0) {
             //child process block
+
             // pipe handling for child processes
             if (read_previous) {
                 dup2(pipe_fds[0], STDIN_FILENO); // Redirect stdin
@@ -264,7 +264,6 @@ void executor(vector<vector<string> > user_commands) {
 
             // Important: Set read_previous *before* closing the write end!
             if (i < user_commands.size() - 1 && user_commands[i+1][0] == "|") {
-                read_previous = true;  // The *next* command will read.
                 close(pipe_fds[1]);   // Close the write end of the *current* pipe
             } else {
                 read_previous = false; // Reset if not piping to next command
